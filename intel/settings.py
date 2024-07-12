@@ -32,7 +32,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'sedatahub-f21ac064b74a.herokuapp.com',
-    'www.amazingdatahubgh.com'
+    'www.sedatahubgh.com'
 ]
 
 
