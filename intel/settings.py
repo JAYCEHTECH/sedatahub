@@ -31,7 +31,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
-    'amazing-data-hub-8e677.ondigitalocean.app',
+    'sedatahub-f21ac064b74a.herokuapp.com',
     'www.amazingdatahubgh.com'
 ]
 
