@@ -67,14 +67,14 @@ INSTALLED_APPS = [
 
 JAZZMIN_SETTINGS = {
     # title of the window (Will default to current_admin_site.site_title if absent or None)
-    "site_title": "Amazing Data Hub Gh",
-    "site_header": "Amazing Data Hub Gh",
+    "site_title": "SEDATAHUBGH",
+    "site_header": "SEDATAHUBGH",
     # "site_logo": "img/site/bestPay Logo.png",
     # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
-    "site_brand": "Amazing Data Hub Gh",
-    "copyright": "Amazing Data Hub Gh",
+    "site_brand": "SEDATAHUBGH",
+    "copyright": "SEDATAHUBGH",
     # "login_logo": "img/site/bp.png",
-    "welcome_sign": "Welcome to the Amazing Data Hub Gh Admin",
+    "welcome_sign": "Welcome to the SEDATAHUBGH Admin",
     "custom_css": 'css/admin.css',
     "user_avatar": 'user',
 }
