@@ -290,7 +290,7 @@ def mtn_pay_with_wallet(request):
         elif user.status == "Super Agent":
             bundle = models.SuperAgentMTNBundlePrice.objects.get(price=float(amount)).bundle_volume
 
-        url = "https://merchant.cloudhubgh.com/api/initiate_mtn"
+        url = "https://console.hubnet.app/api/initiate_mtn"
 
         payload = json.dumps({
             "receiver": str(phone_number),
