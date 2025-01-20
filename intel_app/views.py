@@ -975,7 +975,7 @@ def paystack_webhook(request):
         print(payload.get('event'))
         if payload.get('event') == 'charge.success':
             metadata = r_data.get('metadata')
-            receiver = "metadata.get('receiver')"
+            receiver = metadata.get('receiver')
             db_id = metadata.get('db_id')
             print(db_id)
             # offer = metadata.get('offer')
