@@ -126,19 +126,19 @@ def airtel_tigo(request):
     form = forms.IShareBundleForm(status)
     reference = helper.ref_generator()
     user_email = request.user.email
+
     if request.method == "POST":
         form = forms.IShareBundleForm(data=request.POST, status=status)
         if form.is_valid():
             phone_number = form.cleaned_data["phone_number"]
             amount = form.cleaned_data["offers"]
 
-            print(amount.price)
-
             details = {
                 'phone_number': phone_number,
                 'offers': amount.price
             }
 
+            # Create payment object in your database
             new_payment = models.Payment.objects.create(
                 user=request.user,
                 reference=reference,
@@ -147,112 +147,59 @@ def airtel_tigo(request):
                 channel="ishare",
             )
             new_payment.save()
-            print("payment saved")
-            print("form valid")
 
-            url = "https://payproxyapi.hubtel.com/items/initiate"
+            # -------------------------------
+            # CHECK IF "Pay with Paystack" was clicked
+            # -------------------------------
+            if 'paystack_btn' in request.POST:
+                # =============== PAYSTACK FLOW ===============
+                paystack_amount = int(float(amount.price) * 100)
 
-            payload = json.dumps({
-                "totalAmount": amount.price,
-                "description": "Payment for AT Bundle",
-                "callbackUrl": "https://www.dataforall.store/hubtel_webhook",
-                "returnUrl": "https://www.dataforall.store",
-                "cancellationUrl": "https://www.dataforall.store",
-                "merchantAccountNumber": "2019735",
-                "clientReference": new_payment.reference
-            })
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic eU9XeW9nOjc3OGViODU0NjRiYjQ0ZGRiNmY3Yzk1YTUwYmJjZTAy'
-            }
+                headers = {
+                    'Authorization': config("PAYSTACK_SECRET_KEY"),  # e.g. "Bearer sk_test_xxx"
+                    'Content-Type': 'application/json',
+                }
 
-            response = requests.request("POST", url, headers=headers, data=payload)
+                data = {
+                    'email': user_email,
+                    'amount': paystack_amount,
+                    'reference': reference,
+                    'callback_url': request.build_absolute_uri(reverse('topup-info')),
+                    'metadata': {
+                        'real_amount': amount.price,
+                        'channel': 'ishare',  # or "airtel-tigo"
+                        'db_id': user.id,
+                        'receiver': phone_number,
+                    }
+                }
 
-            data = response.json()
+                url = 'https://api.paystack.co/transaction/initialize'
 
-            checkoutUrl = data['data']['checkoutUrl']
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    res_data = response.json()
+                    if res_data.get('status') is True:
+                        auth_url = res_data['data']['authorization_url']
+                        return redirect(auth_url)
+                    else:
+                        error_message = res_data.get('message', 'Error initializing Paystack.')
+                        messages.error(request, error_message)
+                except requests.RequestException:
+                    messages.error(request, "Error connecting to Paystack. Please try again.")
 
-            return redirect(checkoutUrl)
+                # If something fails, you might want to redirect or just continue to the
+                # normal flow or show an error
+                return redirect('airtel-tigo')  # or wherever you want
 
-        # phone_number = request.POST.get("phone")
-        # offer = request.POST.get("amount")
-        # print(offer)
-        # if user.status == "User":
-        #     bundle = models.IshareBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # elif user.status == "Agent":
-        #     bundle = models.AgentIshareBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # elif user.status == "Super Agent":
-        #     bundle = models.SuperAgentIshareBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # else:
-        #     bundle = models.IshareBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # new_transaction = models.IShareBundleTransaction.objects.create(
-        #     user=request.user,
-        #     bundle_number=phone_number,
-        #     offer=f"{bundle}MB",
-        #     reference=payment_reference,
-        #     transaction_status="Pending"
-        # )
-        # print("created")
-        # new_transaction.save()
-        #
-        # print("===========================")
-        # print(phone_number)
-        # print(bundle)
-        # send_bundle_response = helper.send_bundle(request.user, phone_number, bundle, payment_reference)
-        # data = send_bundle_response.json()
-        #
-        # print(data)
-        #
-        # sms_headers = {
-        #     'Authorization': 'Bearer 1135|1MWAlxV4XTkDlfpld1VC3oRviLhhhZIEOitMjimq',
-        #     'Content-Type': 'application/json'
-        # }
-        #
-        # sms_url = 'https://webapp.usmsgh.com/api/sms/send'
-        #
-        # if send_bundle_response.status_code == 200:
-        #     if data["code"] == "0000":
-        #         transaction_to_be_updated = models.IShareBundleTransaction.objects.get(reference=payment_reference)
-        #         print("got here")
-        #         print(transaction_to_be_updated.transaction_status)
-        #         transaction_to_be_updated.transaction_status = "Completed"
-        #         transaction_to_be_updated.save()
-        #         print(request.user.phone)
-        #         print("***********")
-        #         receiver_message = f"Your bundle purchase has been completed successfully. {bundle}MB has been credited to you by {request.user.phone}.\nReference: {payment_reference}\n"
-        #         sms_message = f"Hello @{request.user.username}. Your bundle purchase has been completed successfully. {bundle}MB has been credited to {phone_number}.\nReference: {payment_reference}\nThank you for using Amazing Data Hub.\n\nThe Amazing Data Hub"
-        #
-        #         return JsonResponse({'status': 'Transaction Completed Successfully', 'icon': 'success'})
-        #     else:
-        #         transaction_to_be_updated = models.IShareBundleTransaction.objects.get(reference=payment_reference)
-        #         transaction_to_be_updated.transaction_status = "Failed"
-        #         new_transaction.save()
-        #         sms_message = f"Hello @{request.user.username}. Something went wrong with your transaction. Contact us for enquiries.\nBundle: {bundle}MB\nPhone Number: {phone_number}.\nReference: {payment_reference}\nThank you for using Amazing Data Hub.\n\nThe Amazing Data Hub"
-        #
-        #         sms_body = {
-        #             'recipient': f"233{request.user.phone}",
-        #             'sender_id': 'Data4All',
-        #             'message': sms_message
-        #         }
-        #         return JsonResponse({'status': 'Something went wrong', 'icon': 'error'})
-        # else:
-        #     transaction_to_be_updated = models.IShareBundleTransaction.objects.get(reference=payment_reference)
-        #     transaction_to_be_updated.transaction_status = "Failed"
-        #     new_transaction.save()
-        #     sms_message = f"Hello @{request.user.username}. Something went wrong with your transaction. Contact us for enquiries.\nBundle: {bundle}MB\nPhone Number: {phone_number}.\nReference: {payment_reference}\nThank you for using Amazing Data Hub.\n\nThe Amazing Data Hub"
-        #
-        #     sms_body = {
-        #         'recipient': f'233{request.user.phone}',
-        #         'sender_id': 'Data4All',
-        #         'message': sms_message
-        #     }
-        #
-        #     # response = requests.request('POST', url=sms_url, params=sms_body, headers=sms_headers)
-        #     #
-        #     # print(response.text)
-        #     return JsonResponse({'status': 'Something went wrong', 'icon': 'error'})
-    user = models.CustomUser.objects.get(id=request.user.id)
-    context = {"form": form, "ref": reference, "email": user_email, "wallet": 0 if user.wallet is None else user.wallet}
+            else:
+                ...
+
+    context = {
+        "form": form,
+        "ref": reference,
+        "email": user_email,
+        "wallet": 0 if user.wallet is None else user.wallet
+    }
     return render(request, "layouts/services/at.html", context=context)
 
 
@@ -399,24 +346,21 @@ def big_time_pay_with_wallet(request):
 @login_required(login_url='login')
 def mtn(request):
     user = models.CustomUser.objects.get(id=request.user.id)
-    phone = user.phone
     status = user.status
     form = forms.MTNForm(status=status)
     reference = helper.ref_generator()
     user_email = request.user.email
+
     if request.method == "POST":
         form = forms.MTNForm(data=request.POST, status=status)
         if form.is_valid():
             phone_number = form.cleaned_data['phone_number']
             amount = form.cleaned_data['offers']
 
-            print(amount.price)
-
             details = {
                 'phone_number': f"0{phone_number}",
                 'offers': amount.price
             }
-
             new_payment = models.Payment.objects.create(
                 user=request.user,
                 reference=reference,
@@ -425,87 +369,57 @@ def mtn(request):
                 channel="mtn",
             )
             new_payment.save()
-            print("payment saved")
-            print("form valid")
 
-            url = "https://payproxyapi.hubtel.com/items/initiate"
+            # -------------------------------
+            # CHECK IF "Pay with Paystack" was clicked
+            # -------------------------------
+            if 'paystack_btn' in request.POST:
+                # =============== PAYSTACK FLOW ===============
+                paystack_amount = int(float(amount.price) * 100)
 
-            payload = json.dumps({
-                "totalAmount": amount.price,
-                "description": "Payment for MTN Bundle",
-                "callbackUrl": "https://www.dataforall.store/hubtel_webhook",
-                "returnUrl": "https://www.dataforall.store",
-                "cancellationUrl": "https://www.dataforall.store",
-                "merchantAccountNumber": "2019735",
-                "clientReference": new_payment.reference
-            })
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic eU9XeW9nOjc3OGViODU0NjRiYjQ0ZGRiNmY3Yzk1YTUwYmJjZTAy'
-            }
+                headers = {
+                    'Authorization': config("PAYSTACK_SECRET_KEY"),
+                    'Content-Type': 'application/json',
+                }
 
-            response = requests.request("POST", url, headers=headers, data=payload)
+                data = {
+                    'email': user_email,
+                    'amount': paystack_amount,
+                    'reference': reference,
+                    'callback_url': request.build_absolute_uri(reverse('topup-info')),
+                    'metadata': {
+                        'real_amount': amount.price,
+                        'channel': 'mtn',
+                        'db_id': user.id,
+                        'receiver': phone_number,
+                    }
+                }
 
-            data = response.json()
+                url = 'https://api.paystack.co/transaction/initialize'
 
-            checkoutUrl = data['data']['checkoutUrl']
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    res_data = response.json()
+                    if res_data.get('status') is True:
+                        auth_url = res_data['data']['authorization_url']
+                        return redirect(auth_url)
+                    else:
+                        error_message = res_data.get('message', 'Error initializing Paystack.')
+                        messages.error(request, error_message)
+                except requests.RequestException:
+                    messages.error(request, "Error connecting to Paystack. Please try again.")
 
-            return redirect(checkoutUrl)
+                return redirect('mtn')  # fallback or error handle
 
+            else:
+                ...
 
-        # amount_paid = request.POST.get("amount")
-        # new_payment = models.Payment.objects.create(
-        #     user=request.user,
-        #     reference=payment_reference,
-        #     amount=amount_paid,
-        #     transaction_date=datetime.now(),
-        #     transaction_status="Completed"
-        # )
-        # new_payment.save()
-        # phone_number = request.POST.get("phone")
-        # offer = request.POST.get("amount")
-        # if user.status == "User":
-        #     bundle = models.MTNBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # elif user.status == "Agent":
-        #     bundle = models.AgentMTNBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # elif user.status == "Super Agent":
-        #     bundle = models.SuperAgentMTNBundlePrice.objects.get(price=float(offer)).bundle_volume
-        # else:
-        #     bundle = models.MTNBundlePrice.objects.get(price=float(offer)).bundle_volume
-        #
-        # url = "https://posapi.bestpaygh.com/api/v1/initiate_mtn_transaction"
-        #
-        # payload = json.dumps({
-        #     "user_id": user_id,
-        #     "receiver": phone_number,
-        #     "data_volume": bundle,
-        #     "reference": reference,
-        #     "amount": offer,
-        #     "channel": phone
-        # })
-        # headers = {
-        #     'Authorization': auth,
-        #     'Content-Type': 'application/json'
-        # }
-        #
-        # response = requests.request("POST", url, headers=headers, data=payload)
-        #
-        # print(response.text)
-        #
-        # print(phone_number)
-        # new_mtn_transaction = models.MTNTransaction.objects.create(
-        #     user=request.user,
-        #     bundle_number=phone_number,
-        #     offer=f"{bundle}MB",
-        #     reference=payment_reference,
-        # )
-        # new_mtn_transaction.save()
-        #
-        # return JsonResponse({'status': "Your transaction will be completed shortly", 'icon': 'success'})
-    user = models.CustomUser.objects.get(id=request.user.id)
-    phone_num = user.phone
-    context = {'form': form, 'phone_num': phone_num,
-               "ref": reference, "email": user_email, "wallet": 0 if user.wallet is None else user.wallet}
+    context = {
+        'form': form,
+        'ref': reference,
+        'email': user_email,
+        'wallet': 0 if user.wallet is None else user.wallet
+    }
     return render(request, "layouts/services/mtn.html", context=context)
 
 
@@ -516,15 +430,10 @@ def afa_registration(request):
     db_user_id = request.user.id
     price = models.AdminInfo.objects.filter().first().afa_price
     user_email = request.user.email
-    print(price)
+
     if request.method == "POST":
         form = forms.AFARegistrationForm(request.POST)
         if form.is_valid():
-            # name = transaction_details["name"]
-            # phone_number = transaction_details["phone"]
-            # gh_card_number = transaction_details["card"]
-            # occupation = transaction_details["occupation"]
-            # date_of_birth = transaction_details["date_of_birth"]
             details = {
                 "name": form.cleaned_data["name"],
                 "phone": form.cleaned_data["phone_number"],
@@ -542,32 +451,77 @@ def afa_registration(request):
             )
             new_payment.save()
 
-            url = "https://payproxyapi.hubtel.com/items/initiate"
+            # -------------------------------
+            # CHECK IF "Pay with Paystack" was clicked
+            # -------------------------------
+            if 'paystack_btn' in request.POST:
+                # =============== PAYSTACK FLOW ===============
+                paystack_amount = int(float(price) * 100)
 
-            payload = json.dumps({
-                "totalAmount": price,
-                "description": "Payment for AFA Registration",
-                "callbackUrl": "https://www.dataforall.store/hubtel_webhook",
-                "returnUrl": "https://www.dataforall.store",
-                "cancellationUrl": "https://www.dataforall.store",
-                "merchantAccountNumber": "2019735",
-                "clientReference": new_payment.reference
-            })
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic eU9XeW9nOjc3OGViODU0NjRiYjQ0ZGRiNmY3Yzk1YTUwYmJjZTAy'
-            }
+                headers = {
+                    'Authorization': config("PAYSTACK_SECRET_KEY"),
+                    'Content-Type': 'application/json',
+                }
 
-            response = requests.request("POST", url, headers=headers, data=payload)
+                data = {
+                    'email': user_email,
+                    'amount': paystack_amount,
+                    'reference': reference,
+                    'callback_url': request.build_absolute_uri(reverse('topup-info')),
+                    'metadata': {
+                        'real_amount': price,
+                        'channel': 'afa',
+                        'db_id': user.id
+                    }
+                }
 
-            data = response.json()
+                url = 'https://api.paystack.co/transaction/initialize'
 
-            checkoutUrl = data['data']['checkoutUrl']
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    res_data = response.json()
+                    if res_data.get('status') is True:
+                        auth_url = res_data['data']['authorization_url']
+                        return redirect(auth_url)
+                    else:
+                        error_message = res_data.get('message', 'Error initializing Paystack.')
+                        messages.error(request, error_message)
+                except requests.RequestException:
+                    messages.error(request, "Error connecting to Paystack. Please try again.")
 
-            return redirect(checkoutUrl)
+                return redirect('afa_registration')  # fallback or error handle
+
+            else:
+                # =============== HUBTEL (Existing) FLOW ===============
+                url = "https://payproxyapi.hubtel.com/items/initiate"
+                payload = json.dumps({
+                    "totalAmount": price,
+                    "description": "Payment for AFA Registration",
+                    "callbackUrl": "https://www.dataforall.store/hubtel_webhook",
+                    "returnUrl": "https://www.dataforall.store",
+                    "cancellationUrl": "https://www.dataforall.store",
+                    "merchantAccountNumber": "2019735",
+                    "clientReference": new_payment.reference
+                })
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic eU9XeW9nOjc3OGViODU0NjRiYjQ0ZGRiNmY3Yzk1YTUwYmJjZTAy'
+                }
+
+                response = requests.request("POST", url, headers=headers, data=payload)
+                data = response.json()
+                checkoutUrl = data['data']['checkoutUrl']
+                return redirect(checkoutUrl)
+
     form = forms.AFARegistrationForm()
-    context = {'form': form, 'ref': reference, 'price': price, 'id': db_user_id, "email": user_email,
-               "wallet": 0 if user.wallet is None else user.wallet}
+    context = {
+        'form': form,
+        'ref': reference,
+        'price': price,
+        'id': db_user_id,
+        'email': user_email,
+        'wallet': 0 if user.wallet is None else user.wallet
+    }
     return render(request, "layouts/services/afa.html", context=context)
 
 
@@ -623,7 +577,6 @@ def big_time(request):
     status = user.status
     form = forms.BigTimeBundleForm(status)
     reference = helper.ref_generator()
-    db_user_id = request.user.id
     user_email = request.user.email
 
     if request.method == "POST":
@@ -631,55 +584,71 @@ def big_time(request):
         if form.is_valid():
             phone_number = form.cleaned_data['phone_number']
             amount = form.cleaned_data['offers']
+
             details = {
                 'phone_number': phone_number,
                 'offers': amount.price
             }
+
             new_payment = models.Payment.objects.create(
                 user=request.user,
                 reference=reference,
                 transaction_details=details,
                 transaction_date=datetime.now(),
-                channel="bigtime"
+                channel="big-time"
             )
             new_payment.save()
 
-            url = "https://payproxyapi.hubtel.com/items/initiate"
+            # -------------------------------
+            # CHECK IF "Pay with Paystack" was clicked
+            # -------------------------------
+            if 'paystack_btn' in request.POST:
+                # =============== PAYSTACK FLOW ===============
+                paystack_amount = int(float(amount.price) * 100)
 
-            payload = json.dumps({
-                "totalAmount": amount.price,
-                "description": "Payment for AFA Registration",
-                "callbackUrl": "https://www.dataforall.store/hubtel_webhook",
-                "returnUrl": "https://www.dataforall.store",
-                "cancellationUrl": "https://www.dataforall.store",
-                "merchantAccountNumber": "2019735",
-                "clientReference": new_payment.reference
-            })
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic eU9XeW9nOjc3OGViODU0NjRiYjQ0ZGRiNmY3Yzk1YTUwYmJjZTAy'
-            }
+                headers = {
+                    'Authorization': config("PAYSTACK_SECRET_KEY"),
+                    'Content-Type': 'application/json',
+                }
 
-            response = requests.request("POST", url, headers=headers, data=payload)
+                data = {
+                    'email': user_email,
+                    'amount': paystack_amount,
+                    'reference': reference,
+                    'callback_url': request.build_absolute_uri(reverse('topup-info')),
+                    'metadata': {
+                        'real_amount': amount.price,
+                        'channel': 'big-time',
+                        'db_id': user.id,
+                        'receiver': phone_number,
+                    }
+                }
 
-            data = response.json()
+                url = 'https://api.paystack.co/transaction/initialize'
 
-            checkoutUrl = data['data']['checkoutUrl']
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    res_data = response.json()
+                    if res_data.get('status') is True:
+                        auth_url = res_data['data']['authorization_url']
+                        return redirect(auth_url)
+                    else:
+                        error_message = res_data.get('message', 'Error initializing Paystack.')
+                        messages.error(request, error_message)
+                except requests.RequestException:
+                    messages.error(request, "Error connecting to Paystack. Please try again.")
 
-            return redirect(checkoutUrl)
-    user = models.CustomUser.objects.get(id=request.user.id)
-    # phone_num = user.phone
-    # mtn_dict = {}
-    #
-    # if user.status == "Agent":
-    #     mtn_offer = models.AgentMTNBundlePrice.objects.all()
-    # else:
-    #     mtn_offer = models.MTNBundlePrice.objects.all()
-    # for offer in mtn_offer:
-    #     mtn_dict[str(offer)] = offer.bundle_volume
-    context = {'form': form,
-               "ref": reference, "email": user_email, 'id': db_user_id,
-               "wallet": 0 if user.wallet is None else user.wallet}
+                return redirect('big_time')  # fallback or error handle
+
+            else:
+               ...
+
+    context = {
+        'form': form,
+        'ref': reference,
+        'email': user_email,
+        'wallet': 0 if user.wallet is None else user.wallet
+    }
     return render(request, "layouts/services/big_time.html", context=context)
 
 
@@ -1044,71 +1013,61 @@ def paystack_webhook(request):
                         return HttpResponse(status=200)
 
                     else:
-                        send_bundle_response = helper.send_bundle(receiver, bundle, reference)
-                        try:
-                            data = send_bundle_response.json()
-                            print(data)
-                        except:
-                            return HttpResponse(status=200)
+                        send_bundle_response = helper.send_bundle(request.user, receiver, bundle, reference)
+                        data = send_bundle_response.json()
+                        print(data)
 
                         sms_headers = {
-                            'Authorization': 'Bearer 1334|wroIm5YnQD6hlZzd8POtLDXxl4vQodCZNorATYGX',
+                            'Authorization': 'Bearer 1135|1MWAlxV4XTkDlfpld1VC3oRviLhhhZIEOitMjimq',
                             'Content-Type': 'application/json'
                         }
 
                         sms_url = 'https://webapp.usmsgh.com/api/sms/send'
                         if send_bundle_response.status_code == 200:
-                            if data["code"] == "200":
+                            if data["code"] == "0000":
                                 new_transaction = models.IShareBundleTransaction.objects.create(
-                                    user=user,
+                                    user=request.user,
                                     bundle_number=receiver,
                                     offer=f"{bundle}MB",
                                     reference=reference,
                                     transaction_status="Completed"
                                 )
                                 new_transaction.save()
-                                receiver_message = f"Your bundle purchase has been completed successfully. {bundle}MB has been credited to you by {user.phone}.\nReference: {reference}\n"
-                                sms_message = f"Hello @{request.user.username}. Your bundle purchase has been completed successfully. {bundle}MB has been credited to {receiver}.\nReference: {reference}\nCurrent Wallet Balance: {user.wallet}\nThank you for using XRAY."
+                                user.wallet -= float(real_amount)
+                                user.save()
+                                receiver_message = f"Your bundle purchase has been completed successfully. {bundle}MB has been credited to you by {request.user.phone}.\nReference: {reference}\n"
 
                                 num_without_0 = receiver[1:]
                                 print(num_without_0)
                                 receiver_body = {
                                     'recipient': f"233{num_without_0}",
-                                    'sender_id': 'XRAY',
+                                    'sender_id': 'Data4All',
                                     'message': receiver_message
                                 }
 
-                                try:
-                                    response1 = requests.get(
-                                        f"https://sms.arkesel.com/sms/api?action=send-sms&api_key=Qmt0VHhiTVlTVE5md1lMcEF6VW4&to=0{num_without_0}&from=XRAY&sms={receiver_message}")
-                                    print(response1.text)
+                                # response = requests.request('POST', url=sms_url, params=receiver_body, headers=sms_headers)
+                                # print(response.text)
 
-                                    response1 = requests.get(
-                                        f"https://sms.arkesel.com/sms/api?action=send-sms&api_key=Qmt0VHhiTVlTVE5md1lMcEF6VW4&to=0{request.user.phone}&from=XRAY&sms={sms_message}")
-                                    print(response1.text)
-                                except:
-                                    print("did not pass")
-                                return HttpResponse(status=200)
+                                sms_body = {
+                                    'recipient': f"233{user.phone}",
+                                    'sender_id': 'Data4All',
+                                }
+
+                                # response = requests.request('POST', url=sms_url, params=sms_body, headers=sms_headers)
+                                #
+                                # print(response.text)
+
+                                return JsonResponse({'status': 'Transaction Completed Successfully', 'icon': 'success'})
                             else:
                                 new_transaction = models.IShareBundleTransaction.objects.create(
-                                    user=user,
+                                    user=request.user,
                                     bundle_number=receiver,
                                     offer=f"{bundle}MB",
                                     reference=reference,
-                                    transaction_status="Pending"
+                                    transaction_status="Failed"
                                 )
                                 new_transaction.save()
-                                return HttpResponse(status=500)
-                        else:
-                            new_transaction = models.IShareBundleTransaction.objects.create(
-                                user=user,
-                                bundle_number=receiver,
-                                offer=f"{bundle}MB",
-                                reference=reference,
-                                transaction_status="Pending"
-                            )
-                            new_transaction.save()
-                            return HttpResponse(status=200)
+                                return JsonResponse({'status': 'Something went wrong', 'icon': 'error'})
                 except Exception as e:
                     print(e)
                     return HttpResponse(status=200)
@@ -1118,7 +1077,7 @@ def paystack_webhook(request):
                         user=user,
                         reference=reference,
                         amount=paid_amount,
-                        transaction_date=datetime.datetime.now(),
+                        transaction_date=datetime.now(),
                         transaction_status="Pending"
                     )
                     new_payment.save()
@@ -1151,7 +1110,7 @@ def paystack_webhook(request):
                     user=user,
                     reference=reference,
                     amount=paid_amount,
-                    transaction_date=datetime.datetime.now(),
+                    transaction_date=datetime.now(),
                     transaction_status="Pending"
                 )
                 new_payment.save()
