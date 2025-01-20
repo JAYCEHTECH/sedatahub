@@ -63,7 +63,7 @@ def send_bundle(user, receiver, bundle_amount, reference):
         "first_name": f"B{user.first_name}",
         "last_name": f"A{user.first_name}",
         "account_number": f"0{user.phone}",
-        "receiver": f"0{receiver}",
+        "receiver": f"{receiver}",
         "account_email": f"{user.email}",
         "reference": str(reference),
         "bundle_amount": bundle_amount
