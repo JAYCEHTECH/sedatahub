@@ -1314,7 +1314,8 @@ def paystack_webhook(request):
                 return HttpResponse(status=200)
         else:
             return HttpResponse(status=401)
-
+    else:
+        return HttpResponse(status=200)
 
 
 @login_required(login_url='login')
