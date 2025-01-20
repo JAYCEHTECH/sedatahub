@@ -60,13 +60,13 @@ def send_bundle(user, receiver, bundle_amount, reference):
     print("=====================================")
 
     payload = json.dumps({
-        "first_name": user.first_name,
-        "last_name": user.last_name,
+        "first_name": f"{user.first_name}",
+        "last_name": f"{user.first_name}",
         "account_number": f"0{user.phone}",
-        "receiver": receiver,
-        "account_email": user.email,
-        "reference": reference,
-        "bundle_amount": bundle_amount
+        "receiver": f"0{receiver}",
+        "account_email": f"{user.email}",
+        "reference": str(reference),
+        "bundle_amount": int(bundle_amount)
     })
     print("herrrrreeeeeeeee")
     response = requests.request("POST", url, headers=headers, data=payload)
