@@ -1013,7 +1013,7 @@ def paystack_webhook(request):
                         return HttpResponse(status=200)
 
                     else:
-                        send_bundle_response = helper.send_bundle(request.user, receiver, bundle, reference)
+                        send_bundle_response = helper.send_bundle(user, receiver, bundle, reference)
                         data = send_bundle_response.json()
                         print(data)
 
