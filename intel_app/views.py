@@ -1026,7 +1026,7 @@ def paystack_webhook(request):
                         if send_bundle_response.status_code == 200:
                             if data["code"] == "0000":
                                 new_transaction = models.IShareBundleTransaction.objects.create(
-                                    user=request.user,
+                                    user=user,
                                     bundle_number=receiver,
                                     offer=f"{bundle}MB",
                                     reference=reference,
@@ -1060,7 +1060,7 @@ def paystack_webhook(request):
                                 return JsonResponse({'status': 'Transaction Completed Successfully', 'icon': 'success'})
                             else:
                                 new_transaction = models.IShareBundleTransaction.objects.create(
-                                    user=request.user,
+                                    user=user,
                                     bundle_number=receiver,
                                     offer=f"{bundle}MB",
                                     reference=reference,
