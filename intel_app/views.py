@@ -1104,7 +1104,7 @@ def paystack_webhook(request):
                     url = "https://console.hubnet.app/api/initiate_mtn"
 
                     payload = json.dumps({
-                        "receiver": str(receiver),
+                        "receiver": f"0{receiver}",
                         "data_volume": int(bundle),
                         "reference": str(reference),
                         "amount": str(real_amount),
