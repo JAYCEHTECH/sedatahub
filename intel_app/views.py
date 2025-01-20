@@ -1100,6 +1100,24 @@ def paystack_webhook(request):
                         reference=reference,
                     )
                     new_mtn_transaction.save()
+
+                    url = "https://console.hubnet.app/api/initiate_mtn"
+
+                    payload = json.dumps({
+                        "receiver": str(receiver),
+                        "data_volume": int(bundle),
+                        "reference": str(reference),
+                        "amount": str(real_amount),
+                        "referrer": f"{user.phone}"
+                    })
+                    headers = {
+                        'Content-Type': 'application/json',
+                        'token': config("BEARER_TOKEN"),
+                    }
+
+                    response = requests.request("POST", url, headers=headers, data=payload)
+
+                    print(response.text)
                     print("mtn complete")
                     return HttpResponse(status=200)
                 except Exception as e:
