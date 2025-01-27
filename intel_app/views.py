@@ -153,7 +153,7 @@ def airtel_tigo(request):
             # -------------------------------
             if 'paystack_btn' in request.POST:
                 # =============== PAYSTACK FLOW ===============
-                paystack_amount = int(float(amount.price) * 100)
+                paystack_amount = int(float(amount.price) * 100 * 1.03)
 
                 headers = {
                     'Authorization': config("PAYSTACK_SECRET_KEY"),  # e.g. "Bearer sk_test_xxx"
@@ -375,7 +375,7 @@ def mtn(request):
             # -------------------------------
             if 'paystack_btn' in request.POST:
                 # =============== PAYSTACK FLOW ===============
-                paystack_amount = int(float(amount.price) * 100)
+                paystack_amount = int(float(amount.price) * 100 * 1.03)
 
                 headers = {
                     'Authorization': config("PAYSTACK_SECRET_KEY"),
@@ -456,7 +456,7 @@ def afa_registration(request):
             # -------------------------------
             if 'paystack_btn' in request.POST:
                 # =============== PAYSTACK FLOW ===============
-                paystack_amount = int(float(price) * 100)
+                paystack_amount = int(float(price) * 100 * 1.03)
 
                 headers = {
                     'Authorization': config("PAYSTACK_SECRET_KEY"),
@@ -604,7 +604,7 @@ def big_time(request):
             # -------------------------------
             if 'paystack_btn' in request.POST:
                 # =============== PAYSTACK FLOW ===============
-                paystack_amount = int(float(amount.price) * 100)
+                paystack_amount = int(float(amount.price) * 100 * 1.03)
 
                 headers = {
                     'Authorization': config("PAYSTACK_SECRET_KEY"),
@@ -913,7 +913,7 @@ def topup_info(request):
             return redirect("request_successful", reference)
 
         else:
-            paystack_amount = int(float(amount) * 100)
+            paystack_amount = int(float(amount) * 100 * 1.03)
 
             headers = {
                     'Authorization': config("PAYSTACK_SECRET_KEY"),
