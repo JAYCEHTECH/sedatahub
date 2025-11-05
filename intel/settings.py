@@ -27,13 +27,14 @@ SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = False
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'sedatahub-f21ac064b74a.herokuapp.com',
     'www.sedatahubgh.com',
-    'localhost'
+    'localhost',
+    'console.sedatahubgh.com'
 ]
 
 
