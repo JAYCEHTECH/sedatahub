@@ -60,42 +60,42 @@ def send_bundle(user, receiver, bundle_amount, reference):
 
     print(response.text)
     print("AT complete")
-    // return HttpResponse(status=200)
+    # return HttpResponse(status=200)
     return response;
 
 
-    // url = "https://console.bestpaygh.com/api/flexi/v1/new_transaction/"
+    # url = "https://console.bestpaygh.com/api/flexi/v1/new_transaction/"
 
-    // headers = {
-    //    "api-key": config("API_KEY"),
-    //    "api-secret": config("API_SECRET"),
-    //    'Content-Type': 'application/json'
-    // }
+    # headers = {
+    #    "api-key": config("API_KEY"),
+    #    "api-secret": config("API_SECRET"),
+    #    'Content-Type': 'application/json'
+    # }
 
-    // print("====================================")
-    // print(user.phone)
-    // print(user.first_name)
-    // print(user.last_name)
-    // print(user.email)
-    // print(receiver)
-    // print(reference)
-    // print(bundle_amount)
-    // print("=====================================")
+    # print("====================================")
+    # print(user.phone)
+    # print(user.first_name)
+    # print(user.last_name)
+    # print(user.email)
+    # print(receiver)
+    # print(reference)
+    # print(bundle_amount)
+    # print("=====================================")
 
-    // payload = json.dumps({
-    //    "first_name": f"B{user.first_name}",
-    //    "last_name": f"A{user.first_name}",
-    //    "account_number": f"0{user.phone}",
-    //    "receiver": f"{receiver}",
-    //    "account_email": f"{user.email}",
-    //    "reference": str(reference),
-    //    "bundle_amount": bundle_amount
-    //})
-    // print("herrrrreeeeeeeee")
-    // response = requests.request("POST", url, headers=headers, data=payload)
-    // print("git here")
-    // print(response.json)
-    // return response
+    # payload = json.dumps({
+    #    "first_name": f"B{user.first_name}",
+    #    "last_name": f"A{user.first_name}",
+    #    "account_number": f"0{user.phone}",
+    #    "receiver": f"{receiver}",
+    #    "account_email": f"{user.email}",
+    #    "reference": str(reference),
+    #    "bundle_amount": bundle_amount
+    # })
+    # print("herrrrreeeeeeeee")
+    # response = requests.request("POST", url, headers=headers, data=payload)
+    # print("git here")
+    # print(response.json)
+    # return response
 
 
 def verify_paystack_transaction(reference):
