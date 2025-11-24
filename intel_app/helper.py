@@ -44,25 +44,24 @@ def send_bundle(user, receiver, bundle_amount, reference):
 
     url = "https://hubnet.app/live/api/context/business/transaction/at-new-transaction"
 
-     print("====================================")
-     print(user.phone)
-     print(user.first_name)
-     print(user.last_name)
-     print(user.email)
-     print(receiver)
-     print(reference)
-     print(bundle_amount)
-     print("=====================================")
+    print("====================================")
+    print(user.phone)
+    print(user.first_name)
+    print(user.last_name)
+    print(user.email)
+    print(receiver)
+    print(reference)
+    print(bundle_amount)
+    print(bundle)
+    print("=====================================")
     
     payload = json.dumps({
         "phone": f"0{receiver}",
         "volume": int(bundle),
         "reference": str(reference),
-        "amount": str(real_amount),
-        "referrer": f"{user.phone}"
     })
     headers = {
-        'Content-Type': 'application/json',
+        #'Content-Type': 'application/json',
         'token': config("BEARER_TOKEN"),
     }
 
