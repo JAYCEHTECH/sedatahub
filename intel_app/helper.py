@@ -41,38 +41,61 @@ def top_up_ref_generator():
 
 
 def send_bundle(user, receiver, bundle_amount, reference):
-    url = "https://console.bestpaygh.com/api/flexi/v1/new_transaction/"
 
-    headers = {
-        "api-key": config("API_KEY"),
-        "api-secret": config("API_SECRET"),
-        'Content-Type': 'application/json'
-    }
-
-    print("====================================")
-    print(user.phone)
-    print(user.first_name)
-    print(user.last_name)
-    print(user.email)
-    print(receiver)
-    print(reference)
-    print(bundle_amount)
-    print("=====================================")
+    url = "https://hubnet.app/live/api/context/business/transaction/at-new-transaction"
 
     payload = json.dumps({
-        "first_name": f"B{user.first_name}",
-        "last_name": f"A{user.first_name}",
-        "account_number": f"0{user.phone}",
-        "receiver": f"{receiver}",
-        "account_email": f"{user.email}",
+        "phone": f"0{receiver}",
+        "volume": int(bundle),
         "reference": str(reference),
-        "bundle_amount": bundle_amount
+        "amount": str(real_amount),
+        "referrer": f"{user.phone}"
     })
-    print("herrrrreeeeeeeee")
+    headers = {
+        'Content-Type': 'application/json',
+        'token': config("BEARER_TOKEN"),
+    }
+
     response = requests.request("POST", url, headers=headers, data=payload)
-    print("git here")
-    print(response.json)
-    return response
+
+    print(response.text)
+    print("AT complete")
+    // return HttpResponse(status=200)
+    return response;
+
+
+    // url = "https://console.bestpaygh.com/api/flexi/v1/new_transaction/"
+
+    // headers = {
+    //    "api-key": config("API_KEY"),
+    //    "api-secret": config("API_SECRET"),
+    //    'Content-Type': 'application/json'
+    // }
+
+    // print("====================================")
+    // print(user.phone)
+    // print(user.first_name)
+    // print(user.last_name)
+    // print(user.email)
+    // print(receiver)
+    // print(reference)
+    // print(bundle_amount)
+    // print("=====================================")
+
+    // payload = json.dumps({
+    //    "first_name": f"B{user.first_name}",
+    //    "last_name": f"A{user.first_name}",
+    //    "account_number": f"0{user.phone}",
+    //    "receiver": f"{receiver}",
+    //    "account_email": f"{user.email}",
+    //    "reference": str(reference),
+    //    "bundle_amount": bundle_amount
+    //})
+    // print("herrrrreeeeeeeee")
+    // response = requests.request("POST", url, headers=headers, data=payload)
+    // print("git here")
+    // print(response.json)
+    // return response
 
 
 def verify_paystack_transaction(reference):
