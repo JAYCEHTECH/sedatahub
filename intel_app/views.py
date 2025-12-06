@@ -61,6 +61,7 @@ def pay_with_wallet(request):
         print(bundle)
         send_bundle_response = helper.send_bundle(request.user, phone_number, bundle, reference)
         data = send_bundle_response.json()
+        print("data")
         print(data)
 
         sms_headers = {
