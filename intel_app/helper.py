@@ -47,6 +47,7 @@ def send_bundle(user, receiver, bundle_amount, reference):
     print("====================================")
     print(user.phone)
     print(user.first_name)
+    print(user.first_name)
     print(user.last_name)
     print(user.email)
     print(receiver)
