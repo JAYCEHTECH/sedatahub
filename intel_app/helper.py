@@ -69,8 +69,9 @@ def send_bundle(user, receiver, bundle_amount, reference):
 
     print(response.text)
     print("AT complete")
-    return HttpResponse(status=200)
-    # return response;
+    # return HttpResponse(status=200)
+    print(response.json())
+    return response;
 
 
     # url = "https://console.bestpaygh.com/api/flexi/v1/new_transaction/"
