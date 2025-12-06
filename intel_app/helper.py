@@ -53,7 +53,6 @@ def send_bundle(user, receiver, bundle_amount, reference):
     print(receiver)
     print(reference)
     print(bundle_amount)
-    print(bundle)
     print("=====================================")
     
     payload = json.dumps({
