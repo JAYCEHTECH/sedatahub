@@ -71,7 +71,7 @@ def pay_with_wallet(request):
 
         sms_url = 'https://webapp.usmsgh.com/api/sms/send'
         if send_bundle_response.status_code == 200:
-            if data["code"] == "0000":
+            if data["status"] == "success":
                 new_transaction = models.IShareBundleTransaction.objects.create(
                     user=request.user,
                     bundle_number=phone_number,
@@ -1025,7 +1025,7 @@ def paystack_webhook(request):
 
                         sms_url = 'https://webapp.usmsgh.com/api/sms/send'
                         if send_bundle_response.status_code == 200:
-                            if data["code"] == "0000":
+                            if data["status"] == "success":
                                 new_transaction = models.IShareBundleTransaction.objects.create(
                                     user=user,
                                     bundle_number=receiver,
@@ -1436,7 +1436,7 @@ def hubtel_webhook(request):
                     sms_url = 'https://webapp.usmsgh.com/api/sms/send'
 
                     if send_bundle_response.status_code == 200:
-                        if data["code"] == "0000":
+                        if data["status"] == "success":
                             transaction_to_be_updated = models.IShareBundleTransaction.objects.get(
                                 reference=reference)
                             print("got here")
