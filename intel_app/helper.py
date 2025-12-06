@@ -57,11 +57,11 @@ def send_bundle(user, receiver, bundle_amount, reference):
     
     payload = json.dumps({
         "phone": str(receiver),
-        "volume": bundle_amount,
+        "volume": str(int(bundle_amount)),
         "reference": str(reference),
     })
     headers = {
-        #'Content-Type': 'application/json',
+        'Content-Type': 'application/json',
         'token': config("BEARER_TOKEN"),
     }
 
