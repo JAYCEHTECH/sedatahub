@@ -56,7 +56,7 @@ def send_bundle(user, receiver, bundle_amount, reference):
     print("=====================================")
     
     payload = json.dumps({
-        "phone": receiver,
+        "phone": str(receiver),
         "volume": bundle_amount,
         "reference": str(reference),
     })
