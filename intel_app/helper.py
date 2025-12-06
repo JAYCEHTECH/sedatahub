@@ -53,7 +53,7 @@ def send_bundle(user, receiver, bundle_amount, reference):
     print(receiver)
     print(reference)
     print(bundle_amount)
-    print(f"0{receiver}")
+    # print(f"0{receiver}")
     print(int(bundle))
     print("=====================================")
     
